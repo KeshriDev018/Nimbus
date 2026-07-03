@@ -10,4 +10,7 @@ export interface Worker {
 
   cpuUsage: number;
   memoryUsage: number;
+
+  failureCount?: number;
+  uptime?: number;
 }

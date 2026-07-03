@@ -60,6 +60,14 @@ class WorkerService {
       offline: workers.filter((w) => w.status === "OFFLINE").length,
     };
   }
+
+  markFailure(workerId: string) {
+    const worker = this.workers.get(workerId);
+
+    if (!worker) return;
+
+    worker.failureCount = (worker.failureCount || 0) + 1;
+  }
 }
 
 export default new WorkerService();

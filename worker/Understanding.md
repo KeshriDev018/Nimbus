@@ -212,3 +212,20 @@ Final Phase 3 Architecture
                     │
 
              Container Runs
+
+
+Phase 4 
+
+User
+  ↓
+Master /deploy
+  ↓
+Scheduler picks Worker
+  ↓
+Master sends HTTP request
+  ↓
+Worker runs Docker
+  ↓
+Worker returns containerId
+  ↓
+Master stores deployment

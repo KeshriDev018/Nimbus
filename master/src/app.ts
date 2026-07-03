@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import workerRoutes from "./routes/worker.routes.js";
+import deployRoutes from "./routes/deploy.routes.js";
+
+
 
 
 
@@ -17,8 +20,9 @@ app.get("/health", (req, res) => {
     message: "Nimbus Master Server is healthy",
   });
 
-
+ app.use("/api/deploy", deployRoutes);
  app.use("/api/v1/workers", workerRoutes);
+ 
  
  
 });
