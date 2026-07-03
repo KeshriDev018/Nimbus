@@ -23,3 +23,103 @@ Heartbeat Loop
 ↓
 
 Wait
+
+
+Phase 2 - Sprint 2: Auto Registration
+Goal
+
+When the worker starts:
+
+Worker Starts
+      │
+      ▼
+Reads .env
+      │
+      ▼
+Registers itself with Master
+      │
+      ▼
+Master stores worker
+      │
+      ▼
+Worker prints:
+✅ Registered Successfully
+
+No manual API calls.
+
+
+What you've just built is not a CRUD application anymore.
+
+You now have two independent applications communicating over HTTP.
+
++------------------+           HTTP POST            +----------------------+
+|  Worker Agent    | -----------------------------> | Master Server      |
+|                  |                                |                    |
+| Reads .env       |                                |RegistersWorker     |
+| Starts           |                                |Stores ClusterState |
++------------------+                                +----------------------+
+
+This is the first step towards a distributed system.
+
+Worker Starts
+
+↓
+
+Registers
+
+↓
+
+Every 5 seconds
+
+↓
+
+Heartbeat
+
+↓
+
+Master updates
+
+CPU
+
+RAM
+
+Last Heartbeat
+
+↓
+
+Worker alive
+
+
+Why are we using systeminformation?
+Node's built-in os module can tell us:
+
+hostname
+total memory
+free memory
+
+But it cannot reliably tell us current CPU usage %.
+
+The systeminformation library provides:
+
+CPU utilization
+Memory utilization
+Disk usage
+Network info
+Battery
+Temperature
+
+We'll use it throughout Nimbus.
+
+
+
+Phase 2 - Sprint 5: Reconnection & Fault Tolerance
+
+Right now, if the Master is down when the Worker starts, registration fails and the Worker just logs an error.
+
+We'll make the Worker intelligent:
+
+If Master is down → keep retrying every few seconds.
+If the connection is lost later → automatically reconnect.
+When the Master comes back → register again and resume heartbeats.
+
+That's how real distributed systems handle temporary network failures and service restarts.
