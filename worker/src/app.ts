@@ -1,7 +1,13 @@
+
+import express from "express";
+import cors from "cors";
+import { dockerService } from "./services/docker.service.js";
+
 import { config } from "./config/env.js";
 import { registerWorker } from "./services/register.service.js";
 import { startHeartbeat } from "./services/heartbeat.service.js";
 import { connectToMaster } from "./services/connection.service.js";
+import dockerRoutes from "./routes/docker.routes.js";
 
 
 
@@ -22,10 +28,31 @@ export async function initializeWorker() {
   startHeartbeat();
 }
 
-// What we learned
+const app = express();
 
-// This sprint introduced several real distributed-system concepts:
+app.use(cors());
+app.use(express.json());
 
-// Retry loops instead of giving up after one failure.
-// Separation of responsibilities: registerWorker() only performs registration, while connectToMaster() decides what to do if registration fails.
-// Resilience: the Worker can survive temporary Master outages without being restarted.
+
+app.get("/health", (req, res) => {
+  res.json({ status: "OK" });
+});
+
+
+app.use("/api/docker", dockerRoutes);
+
+export default app;
+
+
+
+
+
+
+
+
+
+
+
+
+
+

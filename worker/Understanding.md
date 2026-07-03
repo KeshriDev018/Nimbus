@@ -123,3 +123,92 @@ If the connection is lost later → automatically reconnect.
 When the Master comes back → register again and resume heartbeats.
 
 That's how real distributed systems handle temporary network failures and service restarts.
+
+
+
+Current architecture:
+
+             MASTER
+
+      Cluster State
+
+            ▲
+
+Register + Heartbeat
+
+            ▲
+
+        Worker Agent
+
+The Master only knows about workers.
+
+It cannot control them.
+
+Our Goal
+
+We want this:
+
+             MASTER
+
+          "Deploy nginx"
+
+                │
+
+                ▼
+
+         Worker Agent
+
+                │
+
+                ▼
+
+         Docker Engine
+
+                │
+
+                ▼
+
+      nginx Container Running
+
+Notice something important:
+
+The Master never talks to Docker.
+
+The Worker talks to Docker.
+
+This is exactly how Kubernetes works.
+
+
+
+Final Phase 3 Architecture
+                MASTER
+
+                    │
+
+        Deploy Request
+
+                    │
+
+                    ▼
+
+          Worker HTTP Server
+
+                    │
+
+             Controller
+
+                    │
+
+         Deployment Service
+
+                    │
+
+           Docker Service
+
+                    │
+
+            Docker Engine
+
+                    │
+
+             Container Runs
