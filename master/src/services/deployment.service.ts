@@ -1,6 +1,14 @@
 import axios from "axios";
 import schedulerService from "./scheduler.service.js";
 import workerService from "./worker.service.js";
+import { v4 as uuidv4 } from "uuid";
+import deploymentStore from "./deployment.store.js";
+
+export enum DeploymentStatus {
+  RUNNING = "RUNNING",
+  FAILED = "FAILED",
+  STOPPED = "STOPPED",
+}
 
 class DeploymentService {
   async deploy(image: string, name: string) {
@@ -17,10 +25,23 @@ class DeploymentService {
           { image, name },
         );
 
-        return {
+        const deploymentId = uuidv4();
+
+        const deployment = {
+          deploymentId,
           workerId: worker.workerId,
-          score: entry.score,
-          container: response.data,
+          containerId: response.data.data.containerId,
+          image,
+          name,
+          status: DeploymentStatus.RUNNING,
+          createdAt: new Date(),
+        };
+
+        deploymentStore.add(deployment);
+
+        return {
+          success: true,
+          deployment,
         };
       } catch (err) {
         lastError = err;

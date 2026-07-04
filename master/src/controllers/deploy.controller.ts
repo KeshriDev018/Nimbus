@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import deploymentService from "../services/deployment.service.js";
+import deploymentStore from "../services/deployment.store.js";
 
 export const deploy = async (req: Request, res: Response) => {
   try {
@@ -24,4 +25,11 @@ export const deploy = async (req: Request, res: Response) => {
       message: err.message,
     });
   }
+};
+
+export const getDeployments = (req: Request, res: Response) => {
+  return res.json({
+    success: true,
+    deployments: deploymentStore.getAll(),
+  });
 };

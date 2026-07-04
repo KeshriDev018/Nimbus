@@ -20,7 +20,7 @@ app.get("/health", (req, res) => {
     message: "Nimbus Master Server is healthy",
   });
 
- app.use("/api/deploy", deployRoutes);
+ app.use("/api/deployments", deployRoutes);
  app.use("/api/v1/workers", workerRoutes);
  
  
