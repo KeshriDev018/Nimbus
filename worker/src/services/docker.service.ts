@@ -1,6 +1,7 @@
 //This file is the ONLY place that talks to Docker
 
 import Docker from "dockerode";
+import { streamContainerLogs } from "./log.service.js";
 
 const docker = new Docker({
   socketPath:
@@ -18,6 +19,10 @@ export class DockerService {
     });
 
     await container.start();
+   
+
+    // START LOG STREAMING
+    streamContainerLogs(container.id);
 
     return {
       containerId: container.id,

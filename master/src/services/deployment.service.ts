@@ -3,6 +3,7 @@ import schedulerService from "./scheduler.service.js";
 import workerService from "./worker.service.js";
 import { v4 as uuidv4 } from "uuid";
 import deploymentStore from "./deployment.store.js";
+import eventService from "./event.service.js";
 
 export enum DeploymentStatus {
   RUNNING = "RUNNING",
@@ -26,6 +27,11 @@ class DeploymentService {
         );
 
         const deploymentId = uuidv4();
+        eventService.emit(
+          "DEPLOYMENT_STARTED",
+          `Deploying ${image} on worker`,
+          { deploymentId, image },
+        );
 
         const deployment = {
           deploymentId,
@@ -46,6 +52,11 @@ class DeploymentService {
       } catch (err) {
         lastError = err;
         workerService.markFailure(worker.workerId);
+        eventService.emit(
+          "DEPLOYMENT_FAILED",
+          `Deployment failed for ${image}`,
+          { deploymentId: null },
+        );
       }
     }
 

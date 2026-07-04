@@ -1,12 +1,19 @@
 import { Worker } from "../types/worker.types.js";
 import deploymentStore from "./deployment.store.js";
 import recoveryService from "./recovery.service.js";
+import eventService from "./event.service.js";
+import metricsStore from "./metrics.store.js";
 
 class WorkerService {
   private workers = new Map<string, Worker>();
 
   registerWorker(worker: Worker): Worker {
     this.workers.set(worker.workerId, worker);
+    eventService.emit(
+      "WORKER_REGISTERED",
+      `Worker ${worker.workerId} registered`,
+      { workerId: worker.workerId },
+    );
     return worker;
   }
 
@@ -80,6 +87,12 @@ class WorkerService {
     worker.memoryUsage = memory;
     worker.lastHeartbeat = new Date();
     worker.status = "ONLINE";
+
+    // 🔥 ADD METRICS COLLECTION
+    metricsStore.add(workerId, {
+      cpu,
+      memory,
+    });
   }
 
   startFailureDetector() {
@@ -94,19 +107,21 @@ class WorkerService {
 
           deploymentStore.markWorkerDown(worker.workerId);
 
-          console.log(
-            `⚠️ Worker ${worker.workerId} OFFLINE + deployments marked FAILED`,
+          eventService.emit(
+            "WORKER_OFFLINE",
+            `Worker ${worker.workerId} marked OFFLINE`,
+            { workerId: worker.workerId },
           );
           recoveryService.recoverWorkerFailure(worker.workerId);
         }
       });
     }, 5000);
   }
-//   Check all workers
-//    ↓
-// No heartbeat for 15 sec?
-//    ↓
-// Mark OFFLINE
+  //   Check all workers
+  //    ↓
+  // No heartbeat for 15 sec?
+  //    ↓
+  // Mark OFFLINE
 }
 
 export default new WorkerService();

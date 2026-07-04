@@ -1,10 +1,17 @@
 import dotenv from "dotenv";
+import http from "http";
 dotenv.config();
 
 import app from "./app.js";
 import workerService from "./services/worker.service.js";
+import { createLogWebSocket } from "./realtime/log.ws.js";
+const server = http.createServer(app);
 
+createLogWebSocket(server);
 
+server.listen(5000, () => {
+  console.log("Master running with WebSocket");
+});
 
 
 const PORT = process.env.PORT || 5000;
