@@ -1,9 +1,19 @@
 import { Request, Response } from "express";
-import eventStore from "../services/event.store.js";
+import eventService from "../services/event.service.js";
+import { EventModel } from "../models/event.model.js";
 
-export const getEvents = (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    events: eventStore.getAll()
-  });
+export const getEvents = async (req: Request, res: Response) => {
+  try {
+    const events = await EventModel.find().sort({ timestamp: -1 });
+
+    return res.json({
+      success: true,
+      events,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };

@@ -1,11 +1,14 @@
-import deploymentStore from "./deployment.store.js";
 import schedulerService from "./scheduler.service.js";
 import axios from "axios";
+import { DeploymentModel } from "../models/deployment.model.js";
 
 class RecoveryService {
   async recoverWorkerFailure(workerId: string) {
-    const failedDeployments =
-      deploymentStore.getFailedDeploymentsByWorker(workerId);
+    // 🟢 GET FAILED DEPLOYMENTS FROM MONGODB
+    const failedDeployments = await DeploymentModel.find({
+      workerId,
+      status: "FAILED",
+    });
 
     if (failedDeployments.length === 0) return;
 
@@ -13,7 +16,8 @@ class RecoveryService {
 
     for (const dep of failedDeployments) {
       try {
-        const newWorker = schedulerService.pickBestWorker();
+        // 🟢 FIX: scheduler is async now
+        const newWorker = await schedulerService.pickBestWorker();
 
         const response = await axios.post(
           `http://${newWorker.ip}:${newWorker.port}/api/docker/deploy`,
@@ -23,10 +27,15 @@ class RecoveryService {
           },
         );
 
-        // update deployment
-        dep.workerId = newWorker.workerId;
-        dep.containerId = response.data.data.containerId;
-        dep.status = "RUNNING";
+        // 🟢 UPDATE DEPLOYMENT IN DB
+        await DeploymentModel.updateOne(
+          { deploymentId: dep.deploymentId },
+          {
+            workerId: newWorker.workerId,
+            containerId: response.data.data.containerId,
+            status: "RUNNING",
+          },
+        );
 
         console.log(`✅ Recovered deployment ${dep.deploymentId}`);
       } catch (err) {

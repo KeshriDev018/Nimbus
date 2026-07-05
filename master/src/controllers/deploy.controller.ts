@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import deploymentService from "../services/deployment.service.js";
-import deploymentStore from "../services/deployment.store.js";
+import { DeploymentModel } from "../models/deployment.model.js";
 
 export const deploy = async (req: Request, res: Response) => {
   try {
@@ -27,9 +27,18 @@ export const deploy = async (req: Request, res: Response) => {
   }
 };
 
-export const getDeployments = (req: Request, res: Response) => {
-  return res.json({
-    success: true,
-    deployments: deploymentStore.getAll(),
-  });
+export const getDeployments = async (req: Request, res: Response) => {
+  try {
+    const deployments = await DeploymentModel.find().sort({ createdAt: -1 });
+
+    return res.json({
+      success: true,
+      deployments,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };

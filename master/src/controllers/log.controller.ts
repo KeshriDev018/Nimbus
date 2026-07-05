@@ -1,28 +1,46 @@
 import { Request, Response } from "express";
-import logStore from "../services/log.store.js";
-
 import { broadcastLog } from "../realtime/log.ws.js";
+import { LogModel } from "../models/log.model.js";
 
+export const getLogs = async (req: Request, res: Response) => {
+  try {
+    const { containerId } = req.params;
 
+    const logs = await LogModel.find({ containerId }).sort({
+      timestamp: 1,
+    });
 
-
-export const getLogs = (req: Request, res: Response) => {
-  const { containerId } = req.params;
-
-  return res.json({
-    success: true,
-    containerId,
-    logs: logStore.get(containerId as string),
-  });
+    return res.json({
+      success: true,
+      containerId,
+      logs,
+    });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
-export const ingestLogs = (req:Request, res:Response) => {
-  const { containerId, log } = req.body;
+export const ingestLogs = async (req: Request, res: Response) => {
+  try {
+    const { containerId, log } = req.body;
 
-  logStore.add(containerId, log);
+    await LogModel.create({
+      containerId,
+      log,
+      timestamp: new Date(),
+    });
 
-  // 🔥 REAL-TIME STREAM
-  broadcastLog(containerId, log);
+    // 🔥 REAL-TIME STREAM
+    broadcastLog(containerId, log);
 
-  return res.json({ success: true });
+    return res.json({ success: true });
+  } catch (err: any) {
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };

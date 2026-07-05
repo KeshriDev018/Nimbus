@@ -1,10 +1,3 @@
-// We compute score per worker:
-
-// Formula:
-// score =
-//   (100 - cpuUsage) * 0.4 +
-//   (100 - memoryUsage) * 0.4 + healthBonus + stabilityBonus
-
 import workerService from "./worker.service.js";
 
 class SchedulerService {
@@ -24,21 +17,23 @@ class SchedulerService {
     );
   }
 
-  getRankedWorkers() {
-    const workers = workerService.getAllWorkers();
+  // 🟢 FIXED → NOW ASYNC
+  async getRankedWorkers() {
+    const workers = await workerService.getAllWorkers();
 
-    const online = workers.filter((w) => w.status === "ONLINE");
+    const online = workers.filter((w: any) => w.status === "ONLINE");
 
     return online
-      .map((worker) => ({
+      .map((worker: any) => ({
         worker,
         score: this.calculateScore(worker),
       }))
-      .sort((a, b) => b.score - a.score); // 🔥 highest first
+      .sort((a, b) => b.score - a.score);
   }
 
-  pickBestWorker() {
-    const ranked = this.getRankedWorkers();
+  // 🟢 FIXED → NOW ASYNC
+  async pickBestWorker() {
+    const ranked = await this.getRankedWorkers();
 
     if (ranked.length === 0) {
       throw new Error("No available workers");
@@ -49,10 +44,3 @@ class SchedulerService {
 }
 
 export default new SchedulerService();
-
-// Factor	Why it matters
-// CPU	->avoid overload
-// Memory	->avoid OOM
-// Health	->avoid dead nodes
-// Stability	->avoid flaky workers
-// Freshness	->avoid stale nodes

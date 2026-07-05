@@ -2,8 +2,8 @@ import axios from "axios";
 import schedulerService from "./scheduler.service.js";
 import workerService from "./worker.service.js";
 import { v4 as uuidv4 } from "uuid";
-import deploymentStore from "./deployment.store.js";
 import eventService from "./event.service.js";
+import { DeploymentModel } from "../models/deployment.model.js";
 
 export enum DeploymentStatus {
   RUNNING = "RUNNING",
@@ -13,7 +13,7 @@ export enum DeploymentStatus {
 
 class DeploymentService {
   async deploy(image: string, name: string) {
-    const rankedWorkers = schedulerService.getRankedWorkers();
+    const rankedWorkers = await schedulerService.getRankedWorkers();
 
     let lastError: any;
 
@@ -27,13 +27,8 @@ class DeploymentService {
         );
 
         const deploymentId = uuidv4();
-        eventService.emit(
-          "DEPLOYMENT_STARTED",
-          `Deploying ${image} on worker`,
-          { deploymentId, image },
-        );
 
-        const deployment = {
+        const deployment = await DeploymentModel.create({
           deploymentId,
           workerId: worker.workerId,
           containerId: response.data.data.containerId,
@@ -41,9 +36,13 @@ class DeploymentService {
           name,
           status: DeploymentStatus.RUNNING,
           createdAt: new Date(),
-        };
+        });
 
-        deploymentStore.add(deployment);
+        eventService.emit(
+          "DEPLOYMENT_STARTED",
+          `Deploying ${image} on worker ${worker.workerId}`,
+          { deploymentId, image },
+        );
 
         return {
           success: true,
@@ -51,10 +50,12 @@ class DeploymentService {
         };
       } catch (err) {
         lastError = err;
-        workerService.markFailure(worker.workerId);
+
+        await workerService.markFailure(worker.workerId);
+
         eventService.emit(
           "DEPLOYMENT_FAILED",
-          `Deployment failed for ${image}`,
+          `Deployment failed for ${image} on ${worker.workerId}`,
           { deploymentId: null },
         );
       }
